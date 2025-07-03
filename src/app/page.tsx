@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { PlusCircle, Star, MapPin } from "lucide-react";
+import { Star, MapPin, Search, Wifi, Coffee, Wind } from "lucide-react";
 import Header from "@/components/Header";
 
 interface Photo {
@@ -45,83 +45,164 @@ export default function HomePage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-gray-200">
-        <div className="text-2xl font-semibold text-gray-800">Loading cafes...</div>
+      <div className="flex justify-center items-center min-h-screen bg-background">
+        <div className="text-2xl font-semibold text-foreground">Loading cafes...</div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-red-100">
-        <div className="text-2xl text-red-800">Error: {error}</div>
+      <div className="flex justify-center items-center min-h-screen bg-destructive/10">
+        <div className="text-2xl text-destructive">Error: {error}</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-200">
+    <div className="min-h-screen bg-background">
       <Header />
       
       <main>
-        <div className="relative bg-gray-700 text-white py-20 sm:py-24 lg:py-32">
-          <div className="absolute inset-0 overflow-hidden">
-            <div className="absolute inset-0 bg-gray-800 opacity-75"></div>
-          </div>
-          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl">Find Your Perfect Cafe</h2>
-            <p className="mt-6 max-w-2xl mx-auto text-xl text-gray-300">
-              Discover the best cafes, share your reviews, and connect with a community of coffee lovers.
+        <div className="relative bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 text-gray-900 py-24 overflow-hidden">
+          <div className="absolute inset-0 bg-[url('/coffee-pattern.svg')] opacity-10"></div>
+          <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <div className="mb-8">
+              <Coffee className="h-16 w-16 mx-auto text-amber-600 mb-4" />
+            </div>
+            <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-amber-600 via-orange-600 to-red-600 bg-clip-text text-transparent mb-6">
+              카페 탐험가
+            </h1>
+            <p className="text-xl md:text-2xl text-gray-700 max-w-3xl mx-auto mb-8 font-medium">
+              완벽한 카페를 찾고, 리뷰를 공유하며, 커피 애호가들과 소통하세요
             </p>
+            <div className="max-w-2xl mx-auto">
+              <div className="relative group">
+                <div className="absolute inset-0 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full blur opacity-30 group-hover:opacity-50 transition-opacity"></div>
+                <div className="relative bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-xl border border-white/50">
+                  <input 
+                    type="text"
+                    placeholder="카페 이름이나 지역으로 검색하세요"
+                    className="w-full px-6 py-4 bg-transparent text-lg placeholder-gray-500 focus:outline-none"
+                  />
+                  <button className="absolute right-3 top-1/2 -translate-y-1/2 bg-gradient-to-r from-amber-500 to-orange-500 text-white p-3 rounded-full hover:from-amber-600 hover:to-orange-600 transition-all duration-300 shadow-lg">
+                    <Search className="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
         <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {cafes.map((cafe) => (
-              <Link key={cafe.id} href={`/cafes/${cafe.id}`} className="block group">
-                <div className="bg-white rounded-xl shadow-lg overflow-hidden transform transition-all duration-300 group-hover:shadow-2xl group-hover:-translate-y-1">
-                  {cafe.photos && cafe.photos.length > 0 ? (
-                    <img 
-                      src={cafe.photos[0].url} 
-                      alt={cafe.name} 
-                      className="w-full h-48 object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-48 bg-gray-300 flex items-center justify-center text-gray-600">
-                      No Image
+          <div className="flex flex-col lg:flex-row gap-8">
+            <aside className="w-full lg:w-1/4">
+              <div className="bg-white p-6 rounded-2xl shadow-lg sticky top-24 border border-amber-100">
+                <h3 className="text-xl font-bold mb-6 text-gray-900 flex items-center">
+                  <Coffee className="h-5 w-5 mr-2 text-amber-500" />
+                  필터
+                </h3>
+                <div className="space-y-6">
+                  <div>
+                    <h4 className="font-semibold mb-3 text-gray-800">평점</h4>
+                    <div className="space-y-2">
+                      {[5, 4, 3, 2, 1].map(rating => (
+                        <button key={rating} className="w-full flex items-center justify-between p-3 border border-amber-100 rounded-xl hover:bg-amber-50 hover:border-amber-200 transition-colors text-sm">
+                          <div className="flex items-center">
+                            <span className="mr-2">{rating}</span>
+                            <div className="flex">
+                              {[...Array(5)].map((_, i) => (
+                                <Star key={i} className={`h-4 w-4 ${i < rating ? 'text-amber-400 fill-current' : 'text-gray-200'}`} />
+                              ))}
+                            </div>
+                          </div>
+                        </button>
+                      ))}
                     </div>
-                  )}
-                  <div className="p-6">
-                    <h3 className="text-2xl font-bold text-gray-900 mb-2 truncate">{cafe.name}</h3>
-                    <div className="flex items-center text-gray-600 mb-3">
-                      <MapPin className="h-5 w-5 mr-2 flex-shrink-0" />
-                      <p className="text-sm truncate">{cafe.address}</p>
-                    </div>
-                    <div className="flex items-center text-amber-500">
-                      <Star className="h-5 w-5 mr-1" fill="currentColor" />
-                      <span className="font-bold text-lg">{cafe.averageRating.toFixed(1)}</span>
-                      <span className="text-gray-600 ml-1">/ 5.0</span>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-3 text-gray-800">편의시설</h4>
+                    <div className="space-y-3">
+                      <label className="flex items-center p-2 rounded-lg hover:bg-amber-50 cursor-pointer transition-colors">
+                        <input type="checkbox" className="h-4 w-4 rounded border-amber-300 text-amber-500 focus:ring-amber-500 mr-3"/> 
+                        <Wifi className="h-5 w-5 mr-2 text-amber-500"/> 
+                        <span className="text-gray-700">와이파이</span>
+                      </label>
+                      <label className="flex items-center p-2 rounded-lg hover:bg-amber-50 cursor-pointer transition-colors">
+                        <input type="checkbox" className="h-4 w-4 rounded border-amber-300 text-amber-500 focus:ring-amber-500 mr-3"/> 
+                        <Coffee className="h-5 w-5 mr-2 text-amber-500"/> 
+                        <span className="text-gray-700">스페셜티 커피</span>
+                      </label>
+                      <label className="flex items-center p-2 rounded-lg hover:bg-amber-50 cursor-pointer transition-colors">
+                        <input type="checkbox" className="h-4 w-4 rounded border-amber-300 text-amber-500 focus:ring-amber-500 mr-3"/> 
+                        <Wind className="h-5 w-5 mr-2 text-amber-500"/> 
+                        <span className="text-gray-700">야외 좌석</span>
+                      </label>
                     </div>
                   </div>
                 </div>
-              </Link>
-            ))}
-          </div>
+              </div>
+            </aside>
 
-          {cafes.length === 0 && !loading && (
-            <div className="text-center py-16">
-              <h2 className="text-3xl font-bold text-gray-800 mb-3">No Cafes Yet</h2>
-              <p className="text-gray-600 mb-8 max-w-md mx-auto">It looks like our collection is empty. Be the first to add a new cafe and share your favorite spot!</p>
-              <Link href="/cafes/add" className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-full shadow-sm text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-transform hover:scale-105">
-                <PlusCircle className="-ml-1 mr-2 h-5 w-5" />
-                Add Your Favorite Cafe
-              </Link>
+            <div className="w-full lg:w-3/4">
+              <div className="space-y-6">
+{cafes.map((cafe) => (
+                  <div key={cafe.id} className="group bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-500 hover:-translate-y-1 border border-amber-100">
+                    <div className="flex flex-col md:flex-row">
+                      {cafe.photos && cafe.photos.length > 0 ? (
+                        <div className="relative w-full md:w-1/3 h-64 md:h-auto overflow-hidden">
+                          <img 
+                            src={cafe.photos[0].url} 
+                            alt={cafe.name} 
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        </div>
+                      ) : (
+                        <div className="w-full md:w-1/3 h-64 md:h-auto bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center">
+                          <Coffee className="h-20 w-20 text-amber-300" />
+                        </div>
+                      )}
+                      <div className="p-8 flex flex-col justify-between flex-grow">
+                        <div>
+                          <h3 className="text-2xl font-bold text-gray-900 group-hover:text-amber-600 transition-colors duration-300 mb-2">
+                            <Link href={`/cafes/${cafe.id}`}>{cafe.name}</Link>
+                          </h3>
+                          <p className="text-sm text-gray-500 flex items-center mb-4">
+                            <MapPin className="h-4 w-4 mr-2 text-amber-500" /> {cafe.address}
+                          </p>
+                          <p className="text-gray-700 leading-relaxed line-clamp-3">{cafe.description}</p>
+                        </div>
+                        <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-100">
+                          <div className="flex items-center space-x-3">
+                            <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold text-lg px-4 py-2 rounded-xl shadow-lg">
+                              {cafe.averageRating.toFixed(1)}
+                            </div>
+                            <div>
+                              <p className="font-semibold text-gray-900">우수함</p>
+                              <div className="flex text-amber-400">
+                                {[...Array(5)].map((_, i) => (
+                                  <Star key={i} className="h-4 w-4 fill-current" />
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                          <Link 
+                            href={`/cafes/${cafe.id}`} 
+                            className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                          >
+                            자세히 보기
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-          )}
+          </div>
         </div>
       </main>
     </div>
   );
 }
-

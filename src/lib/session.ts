@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 
 interface SessionData {
   id?: string;
+  isLoggedIn?: boolean;
 }
 
 export const sessionOptions = {
@@ -14,5 +15,6 @@ export const sessionOptions = {
 };
 
 export async function getSession() {
-  return getIronSession<SessionData>(cookies() as any, sessionOptions);
+  const cookieStore = await cookies();
+  return await getIronSession<SessionData>(cookieStore as any, sessionOptions);
 }

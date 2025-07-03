@@ -3,87 +3,114 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Coffee, Mail, Key } from "lucide-react";
+import { useSession } from "@/lib/sessionContext";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { refreshSession } = useSession();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage("");
+    setLoading(true);
 
-    const response = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ email, password }),
-    });
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
 
-    const data = await response.json();
-    if (response.ok) {
-      setMessage("Login successful! Redirecting to home...");
-      router.push("/");
-    } else {
-      setMessage(data.message || "Login failed.");
+      const data = await response.json();
+      if (response.ok) {
+        setMessage("Login successful! Redirecting...");
+        refreshSession();
+        router.push("/");
+      } else {
+        setMessage(data.message || "Login failed.");
+      }
+    } catch (error) {
+      setMessage("An unexpected error occurred.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-        <h1 className="text-2xl font-bold mb-6 text-center">Login</h1>
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background">
+      <div className="flex items-center mb-8">
+        <Coffee className="h-10 w-10 text-primary" />
+        <h1 className="text-3xl font-bold ml-2 text-foreground">MyCafe</h1>
+      </div>
+      <div className="bg-card p-8 rounded-lg shadow-sm border border-border w-full max-w-md">
+        <h2 className="text-2xl font-bold mb-6 text-center text-foreground">Login</h2>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
             <label
               htmlFor="email"
-              className="block text-gray-700 text-sm font-bold mb-2"
+              className="block text-sm font-medium text-foreground"
             >
-              Email:
+              Email
             </label>
-            <input
-              type="email"
-              id="email"
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+            <div className="mt-1 relative rounded-md shadow-sm">
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                <Mail className="h-5 w-5 text-muted-foreground" />
+              </div>
+              <input
+                type="email"
+                id="email"
+                className="block w-full rounded-md border-border pl-10 p-3 bg-background focus:border-primary focus:ring-primary"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
           </div>
-          <div className="mb-6">
+          <div>
             <label
               htmlFor="password"
-              className="block text-gray-700 text-sm font-bold mb-2"
+              className="block text-sm font-medium text-foreground"
             >
-              Password:
+              Password
             </label>
-            <input
-              type="password"
-              id="password"
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+            <div className="mt-1 relative rounded-md shadow-sm">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                  <Key className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <input
+                  type="password"
+                  id="password"
+                  className="block w-full rounded-md border-border pl-10 p-3 bg-background focus:border-primary focus:ring-primary"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+            </div>
           </div>
           <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              No account?{" "}
+              <Link href="/register" className="font-medium text-primary hover:underline">
+                Register here
+              </Link>
+            </p>
+          </div>
+          <div>
             <button
               type="submit"
-              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+              disabled={loading}
+              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:bg-muted disabled:text-muted-foreground"
             >
-              Login
+              {loading ? 'Logging in...' : 'Login'}
             </button>
-            <Link
-              href="/register"
-              className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800"
-            >
-              Register
-            </Link>
           </div>
           {message && (
-            <p className="mt-4 text-center text-red-500">{message}</p>
+            <p className={`mt-2 text-sm text-center ${message.includes('successful') ? 'text-green-600' : 'text-destructive'}`}>{message}</p>
           )}
         </form>
       </div>

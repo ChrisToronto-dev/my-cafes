@@ -5,15 +5,15 @@ import { useRouter, useParams } from "next/navigation";
 import { Star, UploadCloud } from "lucide-react";
 import Header from "@/components/Header";
 import { z } from 'zod';
-import { useSession } from '@/lib/sessionContext'; // Assuming a session context exists
+import { useSession } from '@/lib/sessionContext';
 
 const reviewSchema = z.object({
   text: z.string().min(10, "Review must be at least 10 characters.").max(500, "Review must be at most 500 characters."),
-  overallRating: z.number().min(0).max(5),
-  locationRating: z.number().min(0).max(5),
-  priceRating: z.number().min(0).max(5),
-  coffeeRating: z.number().min(0).max(5),
-  bakeryRating: z.number().min(0).max(5),
+  overallRating: z.number().min(1, "Overall rating is required.").max(5),
+  locationRating: z.number().min(1, "Location rating is required.").max(5),
+  priceRating: z.number().min(1, "Price rating is required.").max(5),
+  coffeeRating: z.number().min(1, "Coffee rating is required.").max(5),
+  bakeryRating: z.number().min(1, "Bakery rating is required.").max(5),
 });
 
 type ReviewFormData = z.infer<typeof reviewSchema>;
@@ -40,20 +40,11 @@ export default function AddReviewPage() {
     }
   }, [session, loadingSession, router]);
 
-  if (loadingSession) {
-    return (
-      <div className="min-h-screen bg-gray-200 flex items-center justify-center">
-        <p className="text-lg text-gray-700">Loading user session...</p>
-      </div>
-    );
-  }
-
   useEffect(() => {
-    const ratings = [locationRating, priceRating, coffeeRating, bakeryRating];
-    const validRatings = ratings.filter((r) => r > 0);
-    if (validRatings.length > 0) {
-      const average = validRatings.reduce((acc, r) => acc + r, 0) / validRatings.length;
-      setOverallRating(parseFloat(average.toFixed(1))); // Round to 1 decimal place
+    const ratings = [locationRating, priceRating, coffeeRating, bakeryRating].filter(r => r > 0);
+    if (ratings.length > 0) {
+      const average = ratings.reduce((acc, r) => acc + r, 0) / ratings.length;
+      setOverallRating(parseFloat(average.toFixed(1)));
     } else {
       setOverallRating(0);
     }
@@ -64,15 +55,7 @@ export default function AddReviewPage() {
     setFormError(null);
     setValidationErrors({});
 
-    const formDataForValidation = {
-      text,
-      overallRating,
-      locationRating,
-      priceRating,
-      coffeeRating,
-      bakeryRating,
-    };
-
+    const formDataForValidation = { text, overallRating, locationRating, priceRating, coffeeRating, bakeryRating };
     const result = reviewSchema.safeParse(formDataForValidation);
 
     if (!result.success) {
@@ -115,90 +98,92 @@ export default function AddReviewPage() {
     }
   };
 
-  const renderRatingStars = (rating: number, setRating?: (r: number) => void, fieldName?: keyof ReviewFormData) => {
-    const isInteractive = !!setRating;
+  const renderRatingStars = (rating: number, setRating: (r: number) => void, fieldName: keyof ReviewFormData) => (
+    <div className="flex items-center space-x-1">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <Star
+          key={star}
+          className={`h-8 w-8 cursor-pointer transition-colors ${star <= rating ? "text-yellow-400" : "text-gray-300 hover:text-yellow-300"}`}
+          fill="currentColor"
+          onClick={() => { setRating(star); setValidationErrors(p => ({...p, [fieldName]: undefined}))}}
+        />
+      ))}
+    </div>
+  );
+
+  if (loadingSession) {
     return (
-      <div className="flex items-center space-x-1">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <Star
-            key={star}
-            className={`h-8 w-8 ${isInteractive ? "cursor-pointer transition-colors" : ""} ${star <= rating ? "text-yellow-400" : `text-gray-400 ${isInteractive ? "hover:text-yellow-300" : ""}`}`}
-            fill="currentColor"
-            onClick={isInteractive ? () => {
-              setRating(star);
-              if (fieldName) {
-                setValidationErrors((prev) => ({ ...prev, [fieldName]: undefined }));
-              }
-            } : undefined}
-          />
-        ))}
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-lg text-foreground">Loading user session...</p>
       </div>
     );
-  };
+  }
 
   return (
-    <div className="min-h-screen bg-gray-200">
+    <div className="min-h-screen bg-background">
       <Header />
       <main className="max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-        <div className="bg-white p-8 rounded-xl shadow-lg">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Add a Review</h1>
-          <form onSubmit={handleSubmit} className="space-y-8">
+        <div className="bg-card p-8 rounded-lg shadow-sm border border-border">
+          <h1 className="text-3xl font-bold text-foreground mb-6">Write a Review</h1>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label htmlFor="text" className="block text-sm font-medium text-foreground">Your Review</label>
+              <textarea
+                id="text"
+                rows={5}
+                className="mt-1 block w-full border border-border rounded-md shadow-sm p-3 bg-background focus:ring-primary focus:border-primary"
+                value={text}
+                onChange={(e) => { setText(e.target.value); setValidationErrors(p => ({...p, text: undefined}))}}
+                placeholder="Share your experience..."
+              ></textarea>
+              {validationErrors.text && <p className="mt-2 text-sm text-destructive">{validationErrors.text}</p>}
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="space-y-6">
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium text-foreground">Detailed Ratings</h3>
                 <div>
-                  <label className="block text-lg font-medium text-gray-800 mb-2">Overall Rating</label>
-                  {renderRatingStars(overallRating)}
+                  <label className="block text-sm font-medium text-foreground">Location</label>
+                  {renderRatingStars(locationRating, setLocationRating, 'locationRating')}
+                  {validationErrors.locationRating && <p className="mt-2 text-sm text-destructive">{validationErrors.locationRating}</p>}
                 </div>
-                 <div>
-                  <label htmlFor="text" className="block text-lg font-medium text-gray-800 mb-2">Your Review</label>
-                  <textarea
-                    id="text"
-                    rows={5}
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-teal-500 focus:border-teal-500"
-                    value={text}
-                    onChange={(e) => {
-                      setText(e.target.value);
-                      setValidationErrors((prev) => ({ ...prev, text: undefined }));
-                    }}
-                    placeholder="Share your experience..."
-                  ></textarea>
-                  {validationErrors.text && <p className="mt-2 text-sm text-red-600">{validationErrors.text}</p>}
+                <div>
+                  <label className="block text-sm font-medium text-foreground">Price</label>
+                  {renderRatingStars(priceRating, setPriceRating, 'priceRating')}
+                  {validationErrors.priceRating && <p className="mt-2 text-sm text-destructive">{validationErrors.priceRating}</p>}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-foreground">Coffee</label>
+                  {renderRatingStars(coffeeRating, setCoffeeRating, 'coffeeRating')}
+                  {validationErrors.coffeeRating && <p className="mt-2 text-sm text-destructive">{validationErrors.coffeeRating}</p>}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-foreground">Bakery</label>
+                  {renderRatingStars(bakeryRating, setBakeryRating, 'bakeryRating')}
+                  {validationErrors.bakeryRating && <p className="mt-2 text-sm text-destructive">{validationErrors.bakeryRating}</p>}
                 </div>
               </div>
-              <div className="space-y-6 bg-gray-100 p-6 rounded-lg">
-                <h3 className="text-xl font-semibold text-gray-800">Detailed Ratings</h3>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Location</label>
-                  {renderRatingStars(locationRating, setLocationRating, 'locationRating')}
-                  {validationErrors.locationRating && <p className="mt-2 text-sm text-red-600">{validationErrors.locationRating}</p>}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Price</label>
-                  {renderRatingStars(priceRating, setPriceRating, 'priceRating')}
-                  {validationErrors.priceRating && <p className="mt-2 text-sm text-red-600">{validationErrors.priceRating}</p>}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Coffee</label>
-                  {renderRatingStars(coffeeRating, setCoffeeRating, 'coffeeRating')}
-                  {validationErrors.coffeeRating && <p className="mt-2 text-sm text-red-600">{validationErrors.coffeeRating}</p>}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Bakery</label>
-                  {renderRatingStars(bakeryRating, setBakeryRating, 'bakeryRating')}
-                  {validationErrors.bakeryRating && <p className="mt-2 text-sm text-red-600">{validationErrors.bakeryRating}</p>}
-                </div>
+              <div className="bg-secondary border border-border p-6 rounded-lg flex flex-col items-center justify-center">
+                 <label className="block text-lg font-medium text-foreground mb-2">Overall Rating</label>
+                 <div className="text-5xl font-bold text-primary">{overallRating.toFixed(1)}</div>
+                 <div className="flex items-center mt-2">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className={`h-6 w-6 ${i < Math.round(overallRating) ? "text-yellow-400" : "text-gray-300"}`} fill="currentColor" />
+                    ))}
+                 </div>
+                 {validationErrors.overallRating && <p className="mt-2 text-sm text-destructive">{validationErrors.overallRating}</p>}
               </div>
             </div>
 
-            {formError && <p className="text-red-600 text-sm text-center">{formError}</p>}
+            {formError && <p className="text-sm text-destructive p-3 bg-destructive/10 rounded-md">{formError}</p>}
 
-            <div className="flex justify-end pt-5">
+            <div className="flex justify-end pt-4">
               <button
                 type="submit"
-                className="inline-flex items-center px-8 py-3 border border-transparent text-base font-medium rounded-full shadow-sm text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:bg-gray-500 transition-transform hover:scale-105"
+                className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:bg-muted disabled:text-muted-foreground"
                 disabled={loading}
               >
-                <UploadCloud className="-ml-1 mr-3 h-5 w-5" />
+                <UploadCloud className="-ml-1 mr-2 h-5 w-5" />
                 {loading ? "Submitting..." : "Submit Review"}
               </button>
             </div>

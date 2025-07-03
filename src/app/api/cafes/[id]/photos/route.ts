@@ -4,9 +4,9 @@ import { getSession } from "@/lib/session";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: any // { params: { id: string } } 대신 any 사용
 ) {
-  const { id: cafeId } = params;
+  const { id: cafeId } = context.params;
   const { url } = await request.json();
 
   try {

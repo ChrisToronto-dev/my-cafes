@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
-import { Star, Edit, Trash2 } from "lucide-react";
+import { Star, Edit, Trash2, MapPin, UserCircle } from "lucide-react";
 import Header from "@/components/Header";
 import { useSession } from '@/lib/sessionContext';
 
@@ -15,17 +15,16 @@ interface Cafe {
   averageRating: number;
   reviews: Review[];
   photos: Photo[];
-  userId: string; // Add userId to Cafe interface
+  userId: string;
 }
 
 interface Review {
   id: string;
   text: string;
   overallRating: number;
-  locationRating: number;
-  priceRating: number;
-  coffeeRating: number;
-  bakeryRating: number;
+  tasteRating: number;
+  ambianceRating: number;
+  serviceRating: number;
   user: {
     email: string;
   };
@@ -35,7 +34,6 @@ interface Review {
 interface Photo {
   id: string;
   url: string;
-  createdAt: string;
 }
 
 export default function CafeDetailPage() {
@@ -80,46 +78,35 @@ export default function CafeDetailPage() {
         throw new Error(errorData.message || 'Failed to delete cafe');
       }
 
-      router.push('/'); // Redirect to home page after deletion
+      router.push('/');
     } catch (err: any) {
       alert(`Error deleting cafe: ${err.message}`);
     }
   };
 
-  const renderStars = (rating: number) => {
-    return (
-      <div className="flex items-center">
-        {[...Array(5)].map((_, i) => (
-          <Star
-            key={i}
-            className={`h-5 w-5 ${i < rating ? "text-yellow-400" : "text-gray-400"}`}
-            fill="currentColor"
-          />
-        ))}
-      </div>
-    );
-  };
-
   if (loading || loadingSession) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-gray-200">
-        <div className="text-2xl font-semibold text-gray-800">Loading cafe details...</div>
+      <div className="flex justify-center items-center min-h-screen bg-background">
+        <div className="text-2xl font-semibold text-foreground">Loading cafe details...</div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-red-100">
-        <div className="text-2xl text-red-800">Error: {error}</div>
+      <div className="flex justify-center items-center min-h-screen bg-destructive/10">
+        <div className="text-2xl text-destructive">Error: {error}</div>
       </div>
     );
   }
 
   if (!cafe) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        Cafe not found.
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+          <p className="text-center text-2xl text-muted-foreground">Cafe not found.</p>
+        </main>
       </div>
     );
   }
@@ -127,91 +114,115 @@ export default function CafeDetailPage() {
   const isOwner = session && session.isLoggedIn && session.id === cafe.userId;
 
   return (
-    <div className="min-h-screen bg-gray-200">
+    <div className="min-h-screen bg-background">
       <Header />
 
-      <main className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-xl shadow-lg p-8">
-          <div className="flex justify-between items-center mb-2">
-            <h1 className="text-4xl font-bold text-gray-900">{cafe.name}</h1>
-            {isOwner && (
-              <div className="flex space-x-4">
-                <Link href={`/cafes/${id}/edit`} className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                  <Edit className="-ml-1 mr-2 h-5 w-5" />
-                  Edit
-                </Link>
-                <button onClick={handleDelete} className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-                  <Trash2 className="-ml-1 mr-2 h-5 w-5" />
-                  Delete
-                </button>
+      <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <div className="bg-card rounded-lg shadow-sm overflow-hidden border border-border">
+          <div className="p-6">
+            <div className="flex flex-col md:flex-row justify-between md:items-start mb-4">
+              <div>
+                <h1 className="text-4xl font-bold text-foreground">{cafe.name}</h1>
+                <p className="text-muted-foreground flex items-center mt-2">
+                  <MapPin className="h-5 w-5 mr-2" /> {cafe.address}
+                </p>
+              </div>
+              {isOwner && (
+                <div className="flex space-x-2 mt-4 md:mt-0 flex-shrink-0">
+                  <Link href={`/cafes/${id}/edit`} className="inline-flex items-center px-4 py-2 border border-border text-sm font-medium rounded-md text-foreground bg-card hover:bg-accent">
+                    <Edit className="-ml-1 mr-2 h-5 w-5" />
+                    Edit
+                  </Link>
+                  <button onClick={handleDelete} className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-destructive hover:bg-destructive/90">
+                    <Trash2 className="-ml-1 mr-2 h-5 w-5" />
+                    Delete
+                  </button>
+                </div>
+              )}
+            </div>
+            
+            {cafe.photos.length > 0 && (
+              <div className="mb-6 rounded-lg overflow-hidden">
+                <img 
+                  src={cafe.photos[0].url} 
+                  alt={`Photo of ${cafe.name}`}
+                  className="w-full h-auto md:h-[450px] object-cover"
+                />
               </div>
             )}
-          </div>
-          <p className="text-gray-600 mb-6">{cafe.address}</p>
-          
-          {cafe.photos.length > 0 && (
-            <div className="mb-8">
-              <img 
-                src={cafe.photos[0].url} 
-                alt={`Photo of ${cafe.name}`}
-                className="w-full h-96 object-cover rounded-lg shadow-md"
-              />
+
+            <div className="flex items-center mb-6">
+              <div className="bg-primary text-primary-foreground font-bold text-xl px-4 py-2 rounded-md">{cafe.averageRating.toFixed(1)}</div>
+              <div className="ml-4">
+                <p className="font-bold text-lg text-foreground">Excellent</p>
+                <p className="text-sm text-muted-foreground">Based on {cafe.reviews.length} reviews</p>
+              </div>
             </div>
-          )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-            <div className="lg:col-span-2">
-              {cafe.description && (
-                <p className="text-gray-800 mb-6">{cafe.description}</p>
-              )}
-              <div className="flex items-center mb-8">
-                <span className="text-xl font-semibold mr-3">Average Rating:</span>
-                {renderStars(cafe.averageRating)}
-                <span className="ml-3 text-gray-700 text-lg">
-                  ({cafe.averageRating.toFixed(1)} / 5.0)
-                </span>
-              </div>
+            {cafe.description && (
+              <p className="text-lg text-foreground/90 mb-6 max-w-3xl">{cafe.description}</p>
+            )}
+          </div>
 
-              <hr className="my-8" />
-
-              <div>
-                <h2 className="text-2xl font-bold mb-6">Reviews</h2>
-                {cafe.reviews.length > 0 ? (
-                  <div className="space-y-8">
-                    {cafe.reviews.map((review) => (
-                      <div key={review.id} className="border-b border-gray-300 pb-6">
-                        <div className="flex items-center mb-3">
-                          {renderStars(review.overallRating)}
-                          <span className="ml-3 text-gray-800 font-semibold">
-                            {review.overallRating.toFixed(1)} / 5.0
-                          </span>
+          <div className="bg-secondary p-6 border-t border-border">
+            <h2 className="text-2xl font-bold mb-4 text-foreground">Reviews</h2>
+            <div className="space-y-6">
+              {cafe.reviews.length > 0 ? (
+                cafe.reviews.map((review) => (
+                  <div key={review.id} className="bg-card p-4 rounded-lg border border-border flex items-start space-x-4">
+                    <UserCircle className="h-10 w-10 text-muted-foreground flex-shrink-0 mt-1" />
+                    <div className="flex-grow">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-semibold text-foreground">{review.user.email}</p>
+                          <p className="text-sm text-muted-foreground">{new Date(review.createdAt).toLocaleDateString()}</p>
                         </div>
-                        <p className="text-gray-800 mb-4">{review.text}</p>
-                        <div className="text-sm text-gray-600 grid grid-cols-2 gap-x-4 gap-y-2">
-                          {review.locationRating > 0 && <p><strong>Location:</strong> {review.locationRating} / 5</p>}
-                          {review.priceRating > 0 && <p><strong>Price:</strong> {review.priceRating} / 5</p>}
-                          {review.coffeeRating > 0 && <p><strong>Coffee:</strong> {review.coffeeRating} / 5</p>}
-                          {review.bakeryRating > 0 && <p><strong>Bakery:</strong> {review.bakeryRating} / 5</p>}
+                        <div className="flex items-center space-x-1 bg-blue-100 text-primary font-bold px-3 py-1 rounded-full text-sm">
+                          <Star className="h-4 w-4" fill="currentColor" />
+                          <span>{review.overallRating.toFixed(1)}</span>
                         </div>
-                        <p className="text-sm text-gray-500 mt-4">
-                          By {review.user.email} on{" "}
-                          {new Date(review.createdAt).toLocaleDateString()}
-                        </p>
                       </div>
-                    ))}
+                      <p className="text-foreground/90 mt-2">{review.text}</p>
+                      <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                        <div className="flex items-center">
+                          <span className="font-semibold w-24">Taste:</span>
+                          <div className="flex items-center">
+                            {[...Array(5)].map((_, i) => (
+                              <Star key={i} className={`h-5 w-5 ${i < review.tasteRating ? 'text-amber-400' : 'text-gray-300'}`} fill="currentColor" />
+                            ))}
+                          </div>
+                        </div>
+                        <div className="flex items-center">
+                          <span className="font-semibold w-24">Ambiance:</span>
+                          <div className="flex items-center">
+                            {[...Array(5)].map((_, i) => (
+                              <Star key={i} className={`h-5 w-5 ${i < review.ambianceRating ? 'text-amber-400' : 'text-gray-300'}`} fill="currentColor" />
+                            ))}
+                          </div>
+                        </div>
+                        <div className="flex items-center">
+                          <span className="font-semibold w-24">Service:</span>
+                          <div className="flex items-center">
+                            {[...Array(5)].map((_, i) => (
+                              <Star key={i} className={`h-5 w-5 ${i < review.serviceRating ? 'text-amber-400' : 'text-gray-300'}`} fill="currentColor" />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                ) : (
-                  <p className="text-gray-600">No reviews yet. Be the first!</p>
-                )}
-                <div className="mt-8">
-                  <Link
-                    href={`/cafes/${id}/add-review`}
-                    className="inline-block bg-teal-600 text-white py-3 px-6 rounded-full hover:bg-teal-700 transition-all duration-300 transform hover:scale-105"
-                  >
-                    Add a Review
-                  </Link>
-                </div>
-              </div>
+                ))
+              ) : (
+                <p className="text-muted-foreground">No reviews yet. Be the first!</p>
+              )}
+            </div>
+            <div className="mt-6">
+              <Link
+                href={`/cafes/${id}/add-review`}
+                className="inline-block bg-primary text-primary-foreground font-bold py-3 px-6 rounded-md hover:bg-primary/90 transition-colors"
+              >
+                Write a review
+              </Link>
             </div>
           </div>
         </div>
