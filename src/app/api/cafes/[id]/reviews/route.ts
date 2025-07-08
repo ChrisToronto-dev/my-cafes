@@ -4,9 +4,9 @@ import { getSession } from "@/lib/session";
 
 export async function GET(
   request: NextRequest,
-  context: any // { params: { id: string } } 대신 any 사용
+  { params }: { params: { id: string } }
 ) {
-  const { id } = context.params;
+  const { id } = await params;
 
   try {
     const reviews = await prisma.review.findMany({
@@ -31,9 +31,9 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  context: any // { params: { id: string } } 대신 any 사용
+  { params }: { params: { id: string } }
 ) {
-  const { id: cafeId } = context.params;
+  const { id: cafeId } = await params;
 
   try {
     const session = await getSession();

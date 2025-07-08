@@ -71,10 +71,10 @@ export default function HomePage() {
               <Coffee className="h-16 w-16 mx-auto text-amber-600 mb-4" />
             </div>
             <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-amber-600 via-orange-600 to-red-600 bg-clip-text text-transparent mb-6">
-              카페 탐험가
+              Cafe Explorer
             </h1>
             <p className="text-xl md:text-2xl text-gray-700 max-w-3xl mx-auto mb-8 font-medium">
-              완벽한 카페를 찾고, 리뷰를 공유하며, 커피 애호가들과 소통하세요
+              Find your perfect cafe, share reviews, and connect with fellow coffee lovers
             </p>
             <div className="max-w-2xl mx-auto">
               <div className="relative group">
@@ -82,7 +82,7 @@ export default function HomePage() {
                 <div className="relative bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-xl border border-white/50">
                   <input 
                     type="text"
-                    placeholder="카페 이름이나 지역으로 검색하세요"
+                    placeholder="Search by cafe name or region"
                     className="w-full px-6 py-4 bg-transparent text-lg placeholder-gray-500 focus:outline-none"
                   />
                   <button className="absolute right-3 top-1/2 -translate-y-1/2 bg-gradient-to-r from-amber-500 to-orange-500 text-white p-3 rounded-full hover:from-amber-600 hover:to-orange-600 transition-all duration-300 shadow-lg">
@@ -100,11 +100,11 @@ export default function HomePage() {
               <div className="bg-white p-6 rounded-2xl shadow-lg sticky top-24 border border-amber-100">
                 <h3 className="text-xl font-bold mb-6 text-gray-900 flex items-center">
                   <Coffee className="h-5 w-5 mr-2 text-amber-500" />
-                  필터
+                  Filters
                 </h3>
                 <div className="space-y-6">
                   <div>
-                    <h4 className="font-semibold mb-3 text-gray-800">평점</h4>
+                    <h4 className="font-semibold mb-3 text-gray-800">Rating</h4>
                     <div className="space-y-2">
                       {[5, 4, 3, 2, 1].map(rating => (
                         <button key={rating} className="w-full flex items-center justify-between p-3 border border-amber-100 rounded-xl hover:bg-amber-50 hover:border-amber-200 transition-colors text-sm">
@@ -121,22 +121,22 @@ export default function HomePage() {
                     </div>
                   </div>
                   <div>
-                    <h4 className="font-semibold mb-3 text-gray-800">편의시설</h4>
+                    <h4 className="font-semibold mb-3 text-gray-800">Amenities</h4>
                     <div className="space-y-3">
                       <label className="flex items-center p-2 rounded-lg hover:bg-amber-50 cursor-pointer transition-colors">
                         <input type="checkbox" className="h-4 w-4 rounded border-amber-300 text-amber-500 focus:ring-amber-500 mr-3"/> 
                         <Wifi className="h-5 w-5 mr-2 text-amber-500"/> 
-                        <span className="text-gray-700">와이파이</span>
+                        <span className="text-gray-700">Wi-Fi</span>
                       </label>
                       <label className="flex items-center p-2 rounded-lg hover:bg-amber-50 cursor-pointer transition-colors">
                         <input type="checkbox" className="h-4 w-4 rounded border-amber-300 text-amber-500 focus:ring-amber-500 mr-3"/> 
                         <Coffee className="h-5 w-5 mr-2 text-amber-500"/> 
-                        <span className="text-gray-700">스페셜티 커피</span>
+                        <span className="text-gray-700">Specialty Coffee</span>
                       </label>
                       <label className="flex items-center p-2 rounded-lg hover:bg-amber-50 cursor-pointer transition-colors">
                         <input type="checkbox" className="h-4 w-4 rounded border-amber-300 text-amber-500 focus:ring-amber-500 mr-3"/> 
                         <Wind className="h-5 w-5 mr-2 text-amber-500"/> 
-                        <span className="text-gray-700">야외 좌석</span>
+                        <span className="text-gray-700">Outdoor Seating</span>
                       </label>
                     </div>
                   </div>
@@ -179,7 +179,7 @@ export default function HomePage() {
                               {cafe.averageRating.toFixed(1)}
                             </div>
                             <div>
-                              <p className="font-semibold text-gray-900">우수함</p>
+                              <p className="font-semibold text-gray-900">Excellent</p>
                               <div className="flex text-amber-400">
                                 {[...Array(5)].map((_, i) => (
                                   <Star key={i} className="h-4 w-4 fill-current" />
@@ -191,7 +191,7 @@ export default function HomePage() {
                             href={`/cafes/${cafe.id}`} 
                             className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
                           >
-                            자세히 보기
+                            View Details
                           </Link>
                         </div>
                       </div>
