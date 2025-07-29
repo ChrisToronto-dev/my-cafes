@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Star, MapPin, Search, Wifi, Coffee, Wind } from "lucide-react";
+import { Star, MapPin, Search, Wifi, Coffee, Wind, Plug, PawPrint } from "lucide-react";
 import Header from "@/components/Header";
 
 interface Photo {
@@ -19,6 +19,7 @@ interface Cafe {
   averageRating: number;
   photos: Photo[];
   reviews: any[];
+  amenities: string;
 }
 
 export default function HomePage() {
@@ -28,6 +29,9 @@ export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredCafes, setFilteredCafes] = useState<Cafe[]>([]);
   const [searched, setSearched] = useState(false);
+  const [selectedRating, setSelectedRating] = useState<number | null>(null);
+  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
+  const [amenities, setAmenities] = useState<string[]>([]);
 
   useEffect(() => {
     async function fetchCafes() {
@@ -38,7 +42,15 @@ export default function HomePage() {
         }
         const data = await response.json();
         setCafes(data);
-        setFilteredCafes(data);
+
+        const allAmenities = data.reduce((acc: string[], cafe: Cafe) => {
+          const cafeAmenities = cafe.amenities
+            .split(",")
+            .map((a) => a.trim())
+            .filter(Boolean);
+          return [...acc, ...cafeAmenities];
+        }, []);
+        setAmenities([...new Set(allAmenities)]);
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -48,17 +60,61 @@ export default function HomePage() {
     fetchCafes();
   }, []);
 
+  useEffect(() => {
+    let updatedCafes = cafes;
+
+    if (searched) {
+      const lowercasedQuery = searchQuery.toLowerCase();
+      updatedCafes = updatedCafes.filter(
+        (cafe) =>
+          cafe.name.toLowerCase().includes(lowercasedQuery) ||
+          cafe.address.toLowerCase().includes(lowercasedQuery)
+      );
+    }
+
+    if (selectedRating) {
+      updatedCafes = updatedCafes.filter(
+        (cafe) => Math.round(cafe.averageRating) === selectedRating
+      );
+    }
+
+    if (selectedAmenities.length > 0) {
+      updatedCafes = updatedCafes.filter((cafe) =>
+        selectedAmenities.every((amenity) => cafe.amenities.includes(amenity))
+      );
+    }
+
+    setFilteredCafes(updatedCafes);
+  }, [searchQuery, cafes, searched, selectedRating, selectedAmenities]);
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setSearched(true);
-    const lowercasedQuery = searchQuery.toLowerCase();
-    const filtered = cafes.filter((cafe) => {
-      return (
-        cafe.name.toLowerCase().includes(lowercasedQuery) ||
-        cafe.address.toLowerCase().includes(lowercasedQuery)
-      );
-    });
-    setFilteredCafes(filtered);
+  };
+
+  const handleRatingFilter = (rating: number) => {
+    setSelectedRating(selectedRating === rating ? null : rating);
+  };
+
+  const handleAmenityChange = (amenity: string) => {
+    setSelectedAmenities((prev) =>
+      prev.includes(amenity)
+        ? prev.filter((item) => item !== amenity)
+        : [...prev, amenity]
+    );
+  };
+
+  const amenityIcons: { [key: string]: React.ReactElement } = {
+    wifi: <Wifi className="h-5 w-5 mr-2 text-amber-500" />,
+    power_outlets: <Plug className="h-5 w-5 mr-2 text-amber-500" />,
+    pet_friendly: <PawPrint className="h-5 w-5 mr-2 text-amber-500" />,
+  };
+
+  const formatAmenityName = (amenity: string) => {
+    return amenity
+      .split("_")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
   };
 
   if (loading) {
@@ -126,13 +182,27 @@ export default function HomePage() {
                   <div>
                     <h4 className="font-semibold mb-3 text-gray-800">Rating</h4>
                     <div className="space-y-2">
-                      {[5, 4, 3, 2, 1].map(rating => (
-                        <button key={rating} className="w-full flex items-center justify-between p-3 border border-amber-100 rounded-xl hover:bg-amber-50 hover:border-amber-200 transition-colors text-sm">
+                      {[5, 4, 3, 2, 1].map((rating) => (
+                        <button
+                          key={rating}
+                          onClick={() => handleRatingFilter(rating)}
+                          className={`w-full flex items-center justify-between p-3 border rounded-xl transition-colors text-sm ${
+                            selectedRating === rating
+                              ? "bg-amber-100 border-amber-300"
+                              : "border-amber-100 hover:bg-amber-50 hover:border-amber-200"
+                          }`}>
                           <div className="flex items-center">
                             <span className="mr-2">{rating}</span>
                             <div className="flex">
                               {[...Array(5)].map((_, i) => (
-                                <Star key={i} className={`h-4 w-4 ${i < rating ? 'text-amber-400 fill-current' : 'text-gray-200'}`} />
+                                <Star
+                                  key={i}
+                                  className={`h-4 w-4 ${
+                                    i < rating
+                                      ? "text-amber-400 fill-current"
+                                      : "text-gray-200"
+                                  }`}
+                                />
                               ))}
                             </div>
                           </div>
@@ -143,21 +213,26 @@ export default function HomePage() {
                   <div>
                     <h4 className="font-semibold mb-3 text-gray-800">Amenities</h4>
                     <div className="space-y-3">
-                      <label className="flex items-center p-2 rounded-lg hover:bg-amber-50 cursor-pointer transition-colors">
-                        <input type="checkbox" className="h-4 w-4 rounded border-amber-300 text-amber-500 focus:ring-amber-500 mr-3"/> 
-                        <Wifi className="h-5 w-5 mr-2 text-amber-500"/> 
-                        <span className="text-gray-700">Wi-Fi</span>
-                      </label>
-                      <label className="flex items-center p-2 rounded-lg hover:bg-amber-50 cursor-pointer transition-colors">
-                        <input type="checkbox" className="h-4 w-4 rounded border-amber-300 text-amber-500 focus:ring-amber-500 mr-3"/> 
-                        <Coffee className="h-5 w-5 mr-2 text-amber-500"/> 
-                        <span className="text-gray-700">Specialty Coffee</span>
-                      </label>
-                      <label className="flex items-center p-2 rounded-lg hover:bg-amber-50 cursor-pointer transition-colors">
-                        <input type="checkbox" className="h-4 w-4 rounded border-amber-300 text-amber-500 focus:ring-amber-500 mr-3"/> 
-                        <Wind className="h-5 w-5 mr-2 text-amber-500"/> 
-                        <span className="text-gray-700">Outdoor Seating</span>
-                      </label>
+                      {amenities.map((amenity) => (
+                        <label
+                          key={amenity}
+                          className="flex items-center p-2 rounded-lg hover:bg-amber-50 cursor-pointer transition-colors"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedAmenities.includes(amenity)}
+                            onChange={() => handleAmenityChange(amenity)}
+                            className="h-4 w-4 rounded border-amber-300 text-amber-500 focus:ring-amber-500 mr-3"
+                          />
+                          {amenityIcons[amenity]}
+                          <span className="text-gray-700">{formatAmenityName(amenity)}</span>
+                          <span className="ml-auto text-sm text-gray-500">
+                            (
+                            {cafes.filter((cafe) => cafe.amenities.includes(amenity)).length}
+                            )
+                          </span>
+                        </label>
+                      ))}
                     </div>
                   </div>
                 </div>

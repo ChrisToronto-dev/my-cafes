@@ -13,7 +13,7 @@ export async function GET() {
       },
     });
 
-    const cafesWithAverageRatings = cafes.map(cafe => {
+    const cafesWithAverageRatings = cafes.map((cafe) => {
       const reviews = cafe.reviews;
       const numReviews = reviews.length;
 
@@ -24,8 +24,11 @@ export async function GET() {
         };
       }
 
-      const totalOverallRating = reviews.reduce((acc, review) => acc + (review.overallRating || 0), 0);
-      
+      const totalOverallRating = reviews.reduce(
+        (acc, review) => acc + (review.overallRating || 0),
+        0
+      );
+
       return {
         ...cafe,
         averageRating: totalOverallRating / numReviews,
