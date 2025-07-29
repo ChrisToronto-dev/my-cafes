@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { Building, MapPin, FileText, Camera, UploadCloud, Wifi, Coffee, Sun, BatteryCharging, Briefcase, PawPrint, Cake, XCircle } from 'lucide-react';
 import Header from '@/components/Header';
 import { z } from 'zod';
@@ -17,10 +17,10 @@ const cafeSchema = z.object({
   amenities: z.array(z.string()).optional(),
   photo: z
     .any()
-    .refine((file) => file instanceof File, "Photo is required.")
-    .refine((file) => file.size <= MAX_FILE_SIZE, `Max image size is 10MB.`)
+    .optional()
+    .refine((file) => !file || file.size <= MAX_FILE_SIZE, `Max image size is 10MB.`)
     .refine(
-      (file) => ACCEPTED_IMAGE_TYPES.includes(file.type),
+      (file) => !file || ACCEPTED_IMAGE_TYPES.includes(file.type),
       "Only .jpg, .jpeg, .png, .gif and .webp formats are supported."
     ),
 });
@@ -37,7 +37,7 @@ const amenityOptions = [
   { id: 'desserts', label: 'Desserts', icon: Cake },
 ];
 
-export default function AddCafePage() {
+export default function EditCafePage() {
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
   const [description, setDescription] = useState('');
@@ -47,7 +47,10 @@ export default function AddCafePage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [validationErrors, setValidationErrors] = useState<Partial<Record<keyof CafeFormData, string>>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const params = useParams();
+  const id = params.id as string;
   const { session, loading: loadingSession } = useSession();
 
   useEffect(() => {
@@ -56,10 +59,36 @@ export default function AddCafePage() {
     }
   }, [session, loadingSession, router]);
 
-  if (loadingSession) {
+  useEffect(() => {
+    async function fetchCafe() {
+      try {
+        const response = await fetch(`/api/cafes/${id}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch cafe data');
+        }
+        const data = await response.json();
+        setName(data.name);
+        setAddress(data.address);
+        setDescription(data.description || '');
+        setAmenities(data.amenities ? data.amenities.split(',') : []);
+        if (data.photos && data.photos.length > 0) {
+          setPreview(data.photos[0].url);
+        }
+      } catch (err: any) {
+        setFormError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+    if (id) {
+      fetchCafe();
+    }
+  }, [id]);
+
+  if (loading || loadingSession) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-lg text-foreground">Loading user session...</p>
+        <p className="text-lg text-foreground">Loading...</p>
       </div>
     );
   }
@@ -120,20 +149,22 @@ export default function AddCafePage() {
     if (result.data.amenities) {
       formData.append('amenities', result.data.amenities.join(','));
     }
-    formData.append('photo', result.data.photo);
+    if (photo) {
+        formData.append('photo', photo);
+    }
 
     try {
-      const response = await fetch('/api/cafes', {
-        method: 'POST',
+      const response = await fetch(`/api/cafes/${id}`, {
+        method: 'PUT',
         body: formData,
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to add cafe');
+        throw new Error(errorData.message || 'Failed to update cafe');
       }
 
-      router.push('/');
+      router.push(`/cafes/${id}`);
     } catch (err: any) {
       setFormError(err.message);
     } finally {
@@ -147,7 +178,7 @@ export default function AddCafePage() {
 
       <main className="max-w-2xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
         <div className="bg-card p-8 rounded-lg shadow-sm border border-border">
-          <h1 className="text-3xl font-bold text-foreground mb-6">Add a New Cafe</h1>
+          <h1 className="text-3xl font-bold text-foreground mb-6">Edit Cafe</h1>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-foreground">Cafe Name</label>
@@ -257,7 +288,7 @@ export default function AddCafePage() {
                 className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:bg-muted disabled:text-muted-foreground"
               >
                 <UploadCloud className="-ml-1 mr-2 h-5 w-5" />
-                {submitting ? 'Submitting...' : 'Submit Cafe'}
+                {submitting ? 'Updating...' : 'Update Cafe'}
               </button>
             </div>
           </form>

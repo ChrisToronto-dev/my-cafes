@@ -19,17 +19,17 @@ model User {
 }
 
 model Cafe {
-  id            String    @id @default(uuid())
-  name          String    @unique
-  address       String
-  description   String?
-  averageRating Float     @default(0.0)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  reviews       Review[]
-  photos        Photo[]
-  userId        String?
-  user          User?      @relation(fields: [userId], references: [id])
+  id          String   @id @default(cuid())
+  name        String
+  address     String
+  description String?
+  amenities   String   @default("")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  reviews     Review[]
+  photos      Photo[]
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id])
 }
 
 model Review {

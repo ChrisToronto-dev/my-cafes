@@ -1,0 +1,30 @@
+{
+  "mcpServers": {
+    "puppeteer": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@smithery/cli@latest",
+        "run",
+        "@smithery-ai/puppeteer",
+        "--key",
+        "497a1cae-d403-4d12-89a3-54606be1e43a",
+        "--profile",
+        "mammoth-puma-QO7av3"
+      ]
+    },
+    "mcp-sequentialthinking-tools": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@smithery/cli@latest",
+        "run",
+        "@xinzhongyouhai/mcp-sequentialthinking-tools",
+        "--key",
+        "497a1cae-d403-4d12-89a3-54606be1e43a",
+        "--profile",
+        "mammoth-puma-QO7av3"
+      ]
+    }
+  }
+}

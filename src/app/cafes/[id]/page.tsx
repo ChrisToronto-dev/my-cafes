@@ -6,13 +6,21 @@ import { useRouter, useParams } from "next/navigation";
 import { Star, Edit, Trash2, MapPin, UserCircle } from "lucide-react";
 import Header from "@/components/Header";
 import { useSession } from '@/lib/sessionContext';
+import StarRating from "@/components/StarRating";
+
+import { Wifi, Coffee, Sun, BatteryCharging, Briefcase, PawPrint, Cake } from 'lucide-react';
 
 interface Cafe {
   id: string;
   name: string;
   address: string;
   description: string;
+  amenities: string;
   averageRating: number;
+  averageLocationRating: number;
+  averagePriceRating: number;
+  averageCoffeeRating: number;
+  averageBakeryRating: number;
   reviews: Review[];
   photos: Photo[];
   userId: string;
@@ -22,9 +30,10 @@ interface Review {
   id: string;
   text: string;
   overallRating: number;
-  tasteRating: number;
-  ambianceRating: number;
-  serviceRating: number;
+  locationRating: number;
+  priceRating: number;
+  coffeeRating: number;
+  bakeryRating: number;
   user: {
     email: string;
   };
@@ -35,6 +44,16 @@ interface Photo {
   id: string;
   url: string;
 }
+
+const amenityOptions = [
+  { id: 'wifi', label: 'Wi-Fi', icon: Wifi },
+  { id: 'specialty_coffee', label: 'Specialty Coffee', icon: Coffee },
+  { id: 'patio', label: 'Patio', icon: Sun },
+  { id: 'power_outlets', label: 'Power Outlets', icon: BatteryCharging },
+  { id: 'good_for_working', label: 'Good for Working', icon: Briefcase },
+  { id: 'pet_friendly', label: 'Pet Friendly', icon: PawPrint },
+  { id: 'desserts', label: 'Desserts', icon: Cake },
+];
 
 export default function CafeDetailPage() {
   const params = useParams();
@@ -151,16 +170,57 @@ export default function CafeDetailPage() {
               </div>
             )}
 
-            <div className="flex items-center mb-6">
-              <div className="bg-primary text-primary-foreground font-bold text-xl px-4 py-2 rounded-md">{cafe.averageRating.toFixed(1)}</div>
+            <div className="flex items-center mb-2">
+                <StarRating rating={cafe.averageRating} />
               <div className="ml-4">
-                <p className="font-bold text-lg text-foreground">Excellent</p>
+                <div className="bg-primary text-primary-foreground font-bold text-xl px-4 py-2 rounded-md">{cafe.averageRating.toFixed(1)}</div>
                 <p className="text-sm text-muted-foreground">Based on {cafe.reviews.length} reviews</p>
+              </div>
+            </div>
+
+            <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+              <div className="flex items-center">
+                <span className="font-semibold w-24">Location:</span>
+                <StarRating rating={cafe.averageLocationRating} />
+                {cafe.averageLocationRating && <span className="font-bold text-sm ml-2">{cafe.averageLocationRating.toFixed(1)}</span>}
+              </div>
+              <div className="flex items-center">
+                <span className="font-semibold w-24">Price:</span>
+                <StarRating rating={cafe.averagePriceRating} />
+                {cafe.averagePriceRating && <span className="font-bold text-sm ml-2">{cafe.averagePriceRating.toFixed(1)}</span>}
+              </div>
+              <div className="flex items-center">
+                <span className="font-semibold w-24">Coffee:</span>
+                <StarRating rating={cafe.averageCoffeeRating} />
+                {cafe.averageCoffeeRating && <span className="font-bold text-sm ml-2">{cafe.averageCoffeeRating.toFixed(1)}</span>}
+              </div>
+              <div className="flex items-center">
+                <span className="font-semibold w-24">Bakery:</span>
+                <StarRating rating={cafe.averageBakeryRating} />
+                {cafe.averageBakeryRating && <span className="font-bold text-sm ml-2">{cafe.averageBakeryRating.toFixed(1)}</span>}
               </div>
             </div>
 
             {cafe.description && (
               <p className="text-lg text-foreground/90 mb-6 max-w-3xl">{cafe.description}</p>
+            )}
+
+            {cafe.amenities && (
+              <div className="mb-6">
+                <h3 className="text-xl font-bold text-foreground mb-3">Amenities</h3>
+                <div className="flex flex-wrap gap-3">
+                  {cafe.amenities.split(',').map(amenity => {
+                    const amenityDetail = amenityOptions.find(opt => opt.id === amenity);
+                    if (!amenityDetail) return null;
+                    return (
+                      <div key={amenity} className="flex items-center gap-2 bg-accent text-accent-foreground px-3 py-1.5 rounded-full text-sm font-medium">
+                        <amenityDetail.icon className="h-5 w-5" />
+                        <span>{amenityDetail.label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             )}
           </div>
 
@@ -177,36 +237,32 @@ export default function CafeDetailPage() {
                           <p className="font-semibold text-foreground">{review.user.email}</p>
                           <p className="text-sm text-muted-foreground">{new Date(review.createdAt).toLocaleDateString()}</p>
                         </div>
-                        <div className="flex items-center space-x-1 bg-blue-100 text-primary font-bold px-3 py-1 rounded-full text-sm">
-                          <Star className="h-4 w-4" fill="currentColor" />
-                          <span>{review.overallRating.toFixed(1)}</span>
+                        <div className="flex items-center space-x-1">
+                          <StarRating rating={review.overallRating} />
+                          <span className="font-bold text-sm">{review.overallRating.toFixed(1)}</span>
                         </div>
                       </div>
                       <p className="text-foreground/90 mt-2">{review.text}</p>
                       <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
                         <div className="flex items-center">
-                          <span className="font-semibold w-24">Taste:</span>
-                          <div className="flex items-center">
-                            {[...Array(5)].map((_, i) => (
-                              <Star key={i} className={`h-5 w-5 ${i < review.tasteRating ? 'text-amber-400' : 'text-gray-300'}`} fill="currentColor" />
-                            ))}
-                          </div>
+                          <span className="font-semibold w-24">Location:</span>
+                          <StarRating rating={review.locationRating} />
+                          {review.locationRating && <span className="font-bold text-sm ml-2">{review.locationRating.toFixed(1)}</span>}
                         </div>
                         <div className="flex items-center">
-                          <span className="font-semibold w-24">Ambiance:</span>
-                          <div className="flex items-center">
-                            {[...Array(5)].map((_, i) => (
-                              <Star key={i} className={`h-5 w-5 ${i < review.ambianceRating ? 'text-amber-400' : 'text-gray-300'}`} fill="currentColor" />
-                            ))}
-                          </div>
+                          <span className="font-semibold w-24">Price:</span>
+                          <StarRating rating={review.priceRating} />
+                          {review.priceRating && <span className="font-bold text-sm ml-2">{review.priceRating.toFixed(1)}</span>}
                         </div>
                         <div className="flex items-center">
-                          <span className="font-semibold w-24">Service:</span>
-                          <div className="flex items-center">
-                            {[...Array(5)].map((_, i) => (
-                              <Star key={i} className={`h-5 w-5 ${i < review.serviceRating ? 'text-amber-400' : 'text-gray-300'}`} fill="currentColor" />
-                            ))}
-                          </div>
+                          <span className="font-semibold w-24">Coffee:</span>
+                          <StarRating rating={review.coffeeRating} />
+                          {review.coffeeRating && <span className="font-bold text-sm ml-2">{review.coffeeRating.toFixed(1)}</span>}
+                        </div>
+                        <div className="flex items-center">
+                          <span className="font-semibold w-24">Bakery:</span>
+                          <StarRating rating={review.bakeryRating} />
+                          {review.bakeryRating && <span className="font-bold text-sm ml-2">{review.bakeryRating.toFixed(1)}</span>}
                         </div>
                       </div>
                     </div>

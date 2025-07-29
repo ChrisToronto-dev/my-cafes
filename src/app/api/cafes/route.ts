@@ -12,7 +12,27 @@ export async function GET() {
         photos: true,
       },
     });
-    return NextResponse.json(cafes, { status: 200 });
+
+    const cafesWithAverageRatings = cafes.map(cafe => {
+      const reviews = cafe.reviews;
+      const numReviews = reviews.length;
+
+      if (numReviews === 0) {
+        return {
+          ...cafe,
+          averageRating: 0,
+        };
+      }
+
+      const totalOverallRating = reviews.reduce((acc, review) => acc + (review.overallRating || 0), 0);
+      
+      return {
+        ...cafe,
+        averageRating: totalOverallRating / numReviews,
+      };
+    });
+
+    return NextResponse.json(cafesWithAverageRatings, { status: 200 });
   } catch (error) {
     console.error("Get cafes error:", error);
     return NextResponse.json(
@@ -33,6 +53,7 @@ export async function POST(request: Request) {
     const name = formData.get("name") as string;
     const address = formData.get("address") as string;
     const description = formData.get("description") as string;
+    const amenities = formData.get("amenities") as string;
     const photo = formData.get("photo") as File;
 
     if (!name || !address || !photo) {
@@ -55,6 +76,7 @@ export async function POST(request: Request) {
         name,
         address,
         description,
+        amenities,
         userId: session.id,
         photos: {
           create: {

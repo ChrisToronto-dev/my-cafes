@@ -18,12 +18,16 @@ interface Cafe {
   description: string;
   averageRating: number;
   photos: Photo[];
+  reviews: any[];
 }
 
 export default function HomePage() {
   const [cafes, setCafes] = useState<Cafe[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filteredCafes, setFilteredCafes] = useState<Cafe[]>([]);
+  const [searched, setSearched] = useState(false);
 
   useEffect(() => {
     async function fetchCafes() {
@@ -34,6 +38,7 @@ export default function HomePage() {
         }
         const data = await response.json();
         setCafes(data);
+        setFilteredCafes(data);
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -42,6 +47,19 @@ export default function HomePage() {
     }
     fetchCafes();
   }, []);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSearched(true);
+    const lowercasedQuery = searchQuery.toLowerCase();
+    const filtered = cafes.filter((cafe) => {
+      return (
+        cafe.name.toLowerCase().includes(lowercasedQuery) ||
+        cafe.address.toLowerCase().includes(lowercasedQuery)
+      );
+    });
+    setFilteredCafes(filtered);
+  };
 
   if (loading) {
     return (
@@ -79,16 +97,18 @@ export default function HomePage() {
             <div className="max-w-2xl mx-auto">
               <div className="relative group">
                 <div className="absolute inset-0 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full blur opacity-30 group-hover:opacity-50 transition-opacity"></div>
-                <div className="relative bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-xl border border-white/50">
+                <form className="relative bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-xl border border-white/50" onSubmit={handleSearch}>
                   <input 
                     type="text"
                     placeholder="Search by cafe name or region"
                     className="w-full px-6 py-4 bg-transparent text-lg placeholder-gray-500 focus:outline-none"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                   />
-                  <button className="absolute right-3 top-1/2 -translate-y-1/2 bg-gradient-to-r from-amber-500 to-orange-500 text-white p-3 rounded-full hover:from-amber-600 hover:to-orange-600 transition-all duration-300 shadow-lg">
+                  <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 bg-gradient-to-r from-amber-500 to-orange-500 text-white p-3 rounded-full hover:from-amber-600 hover:to-orange-600 transition-all duration-300 shadow-lg">
                     <Search className="h-5 w-5" />
                   </button>
-                </div>
+                </form>
               </div>
             </div>
           </div>
@@ -145,59 +165,78 @@ export default function HomePage() {
             </aside>
 
             <div className="w-full lg:w-3/4">
+              {searched && (
+                <div className="mb-4">
+                  <p className="text-lg font-semibold">
+                    Found {filteredCafes.length} results for "{searchQuery}"
+                  </p>
+                </div>
+              )}
               <div className="space-y-6">
-{cafes.map((cafe) => (
-                  <div key={cafe.id} className="group bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-500 hover:-translate-y-1 border border-amber-100">
-                    <div className="flex flex-col md:flex-row">
-                      {cafe.photos && cafe.photos.length > 0 ? (
-                        <div className="relative w-full md:w-1/3 h-64 md:h-auto overflow-hidden">
-                          <img 
-                            src={cafe.photos[0].url} 
-                            alt={cafe.name} 
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                        </div>
-                      ) : (
-                        <div className="w-full md:w-1/3 h-64 md:h-auto bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center">
-                          <Coffee className="h-20 w-20 text-amber-300" />
-                        </div>
-                      )}
-                      <div className="p-8 flex flex-col justify-between flex-grow">
-                        <div>
-                          <h3 className="text-2xl font-bold text-gray-900 group-hover:text-amber-600 transition-colors duration-300 mb-2">
-                            <Link href={`/cafes/${cafe.id}`}>{cafe.name}</Link>
-                          </h3>
-                          <p className="text-sm text-gray-500 flex items-center mb-4">
-                            <MapPin className="h-4 w-4 mr-2 text-amber-500" /> {cafe.address}
-                          </p>
-                          <p className="text-gray-700 leading-relaxed line-clamp-3">{cafe.description}</p>
-                        </div>
-                        <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-100">
-                          <div className="flex items-center space-x-3">
-                            <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold text-lg px-4 py-2 rounded-xl shadow-lg">
-                              {cafe.averageRating.toFixed(1)}
-                            </div>
-                            <div>
-                              <p className="font-semibold text-gray-900">Excellent</p>
-                              <div className="flex text-amber-400">
-                                {[...Array(5)].map((_, i) => (
-                                  <Star key={i} className="h-4 w-4 fill-current" />
-                                ))}
-                              </div>
-                            </div>
+                {filteredCafes.length > 0 ? (
+                  filteredCafes.map((cafe) => (
+                    <div key={cafe.id} className="group bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-500 hover:-translate-y-1 border border-amber-100">
+                      <div className="flex flex-col md:flex-row">
+                        {cafe.photos && cafe.photos.length > 0 ? (
+                          <div className="relative w-full md:w-1/3 h-64 md:h-auto overflow-hidden">
+                            <img 
+                              src={cafe.photos[0].url} 
+                              alt={cafe.name} 
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                           </div>
-                          <Link 
-                            href={`/cafes/${cafe.id}`} 
-                            className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
-                          >
-                            View Details
-                          </Link>
+                        ) : (
+                          <div className="w-full md:w-1/3 h-64 md:h-auto bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center">
+                            <Coffee className="h-20 w-20 text-amber-300" />
+                          </div>
+                        )}
+                        <div className="p-8 flex flex-col justify-between flex-grow">
+                          <div>
+                            <h3 className="text-2xl font-bold text-gray-900 group-hover:text-amber-600 transition-colors duration-300 mb-2">
+                              <Link href={`/cafes/${cafe.id}`}>{cafe.name}</Link>
+                            </h3>
+                            <p className="text-sm text-gray-500 flex items-center mb-4">
+                              <MapPin className="h-4 w-4 mr-2 text-amber-500" /> {cafe.address}
+                            </p>
+                            <p className="text-gray-700 leading-relaxed line-clamp-3">{cafe.description}</p>
+                          </div>
+                          <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-100">
+                            <div className="flex items-center space-x-3">
+                              {cafe.reviews && cafe.reviews.length > 0 ? (
+                                <>
+                                  <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold text-lg px-4 py-2 rounded-xl shadow-lg">
+                                    {cafe.averageRating.toFixed(1)}
+                                  </div>
+                                  <div>
+                                    <p className="font-semibold text-gray-900">
+                                      {cafe.averageRating >= 4.5 ? 'Excellent' : cafe.averageRating >= 4 ? 'Great' : cafe.averageRating >= 3 ? 'Good' : 'Average'}
+                                    </p>
+                                    <div className="flex text-amber-400">
+                                      {[...Array(5)].map((_, i) => (
+                                        <Star key={i} className={`h-4 w-4 ${i < Math.round(cafe.averageRating) ? 'fill-current' : ''}`} />
+                                      ))}
+                                    </div>
+                                  </div>
+                                </>
+                              ) : (
+                                <p className="text-sm text-gray-500">No reviews yet</p>
+                              )}
+                            </div>
+                            <Link 
+                              href={`/cafes/${cafe.id}`} 
+                              className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                            >
+                              View Details
+                            </Link>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  searched && <p className="text-center text-gray-500">No results found.</p>
+                )}
               </div>
             </div>
           </div>
