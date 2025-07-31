@@ -1,11 +1,11 @@
 'use client';
 
 import Link from 'next/link';
+import { signOut, useSession } from 'next-auth/react';
 import { Coffee, Plus, LogIn, LogOut } from 'lucide-react';
-import { useSession } from '@/lib/sessionContext';
 
 const Header = () => {
-  const { session, loading } = useSession();
+  const { data: session, status } = useSession();
 
   return (
     <header className="bg-card text-card-foreground shadow-sm sticky top-0 z-50">
@@ -22,17 +22,17 @@ const Header = () => {
               <Plus className="-ml-1 mr-2 h-5 w-5" />
               Add Cafe
             </Link>
-            {!loading && !session?.isLoggedIn && (
+            {status === 'unauthenticated' && (
               <Link href="/login" className="inline-flex items-center px-4 py-2 border border-border text-sm font-medium rounded-md text-foreground bg-card hover:bg-accent">
                 <LogIn className="mr-2 h-5 w-5"/>
                 Login
               </Link>
             )}
-            {!loading && session?.isLoggedIn && (
-               <Link href="/api/auth/logout" className="inline-flex items-center px-4 py-2 border border-border text-sm font-medium rounded-md text-foreground bg-card hover:bg-accent">
+            {status === 'authenticated' && (
+              <button onClick={() => signOut()} className="inline-flex items-center px-4 py-2 border border-border text-sm font-medium rounded-md text-foreground bg-card hover:bg-accent">
                 <LogOut className="mr-2 h-5 w-5"/>
                 Logout
-              </Link>
+              </button>
             )}
           </div>
         </div>

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import { Star, Edit, Trash2, MapPin, UserCircle } from "lucide-react";
 import Header from "@/components/Header";
-import { useSession } from '@/lib/sessionContext';
+import { useSession } from 'next-auth/react';
 import StarRating from "@/components/StarRating";
 
 import { Wifi, Coffee, Sun, BatteryCharging, Briefcase, PawPrint, Cake } from 'lucide-react';
@@ -62,7 +62,7 @@ export default function CafeDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
-  const { session, loading: loadingSession } = useSession();
+  const { data: session, status } = useSession();
 
   useEffect(() => {
     async function fetchCafe() {
@@ -103,7 +103,7 @@ export default function CafeDetailPage() {
     }
   };
 
-  if (loading || loadingSession) {
+  if (loading || status === 'loading') {
     return (
       <div className="flex justify-center items-center min-h-screen bg-background">
         <div className="text-2xl font-semibold text-foreground">Loading cafe details...</div>
@@ -130,7 +130,7 @@ export default function CafeDetailPage() {
     );
   }
 
-  const isOwner = session && session.isLoggedIn && session.id === cafe.userId;
+  const isOwner = session && (session.user as any).id === cafe.userId;
 
   return (
     <div className="min-h-screen bg-background">

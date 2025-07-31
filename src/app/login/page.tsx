@@ -1,43 +1,34 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { Coffee, Mail, Key } from "lucide-react";
-import { useSession } from "@/lib/sessionContext";
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { signIn } from 'next-auth/react';
+import { Coffee, Mail, Key } from 'lucide-react';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const { refreshSession } = useSession();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setMessage("");
+    setError('');
     setLoading(true);
 
-    try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
+    const result = await signIn('credentials', {
+      redirect: false,
+      email,
+      password,
+    });
 
-      const data = await response.json();
-      if (response.ok) {
-        setMessage("Login successful! Redirecting...");
-        refreshSession();
-        router.push("/");
-      } else {
-        setMessage(data.message || "Login failed.");
-      }
-    } catch (error) {
-      setMessage("An unexpected error occurred.");
-    } finally {
+    if (result?.error) {
+      setError('Invalid email or password');
       setLoading(false);
+    } else {
+      router.push('/');
     }
   };
 
@@ -109,10 +100,29 @@ export default function LoginPage() {
               {loading ? 'Logging in...' : 'Login'}
             </button>
           </div>
-          {message && (
-            <p className={`mt-2 text-sm text-center ${message.includes('successful') ? 'text-green-600' : 'text-destructive'}`}>{message}</p>
+          {error && (
+            <p className="mt-2 text-sm text-center text-destructive">{error}</p>
           )}
         </form>
+        <div className="mt-6">
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-border" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-card text-muted-foreground">Or continue with</span>
+            </div>
+          </div>
+          <div className="mt-6">
+            <button
+              onClick={() => signIn('google', { callbackUrl: '/' })}
+              className="w-full inline-flex justify-center py-3 px-4 border border-border rounded-md shadow-sm bg-card text-foreground text-sm font-medium hover:bg-accent"
+            >
+              <svg className="w-5 h-5 mr-2" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512"><path fill="currentColor" d="M488 261.8C488 403.3 381.5 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 126 24.4 169.3 63.4l-67.8 67.8C293.5 114.6 272.1 104 248 104c-73.6 0-134.3 60.3-134.3 134.3s60.7 134.3 134.3 134.3c83.8 0 119.2-64.2 122.7-97.3H248v-85.3h236.1c2.3 12.7 3.9 26.9 3.9 41.4z"></path></svg>
+              Sign in with Google
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

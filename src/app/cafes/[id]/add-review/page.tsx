@@ -5,7 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import { Star, UploadCloud } from "lucide-react";
 import Header from "@/components/Header";
 import { z } from 'zod';
-import { useSession } from '@/lib/sessionContext';
+import { useSession } from 'next-auth/react';
 
 const reviewSchema = z.object({
   text: z.string().min(10, "Review must be at least 10 characters.").max(500, "Review must be at most 500 characters."),
@@ -32,13 +32,13 @@ export default function AddReviewPage() {
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [validationErrors, setValidationErrors] = useState<Partial<Record<keyof ReviewFormData, string>>>({});
-  const { session, loading: loadingSession } = useSession();
+  const { data: session, status } = useSession();
 
   useEffect(() => {
-    if (!loadingSession && (!session || !session.isLoggedIn)) {
+    if (status === 'unauthenticated') {
       router.push('/login');
     }
-  }, [session, loadingSession, router]);
+  }, [status, router]);
 
   useEffect(() => {
     const ratings = [locationRating, priceRating, coffeeRating, bakeryRating].filter(r => r > 0);
@@ -111,7 +111,7 @@ export default function AddReviewPage() {
     </div>
   );
 
-  if (loadingSession) {
+  if (status === 'loading') {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <p className="text-lg text-foreground">Loading user session...</p>

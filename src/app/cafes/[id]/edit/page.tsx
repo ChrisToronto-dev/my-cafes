@@ -5,7 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { Building, MapPin, FileText, Camera, UploadCloud, Wifi, Coffee, Sun, BatteryCharging, Briefcase, PawPrint, Cake, XCircle } from 'lucide-react';
 import Header from '@/components/Header';
 import { z } from 'zod';
-import { useSession } from '@/lib/sessionContext';
+import { useSession } from 'next-auth/react';
 
 const MAX_FILE_SIZE = 1024 * 1024 * 10; // 10MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"];
@@ -51,13 +51,13 @@ export default function EditCafePage() {
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
-  const { session, loading: loadingSession } = useSession();
+  const { data: session, status } = useSession();
 
   useEffect(() => {
-    if (!loadingSession && (!session || !session.isLoggedIn)) {
+    if (status === 'unauthenticated') {
       router.push('/login');
     }
-  }, [session, loadingSession, router]);
+  }, [status, router]);
 
   useEffect(() => {
     async function fetchCafe() {
@@ -85,7 +85,7 @@ export default function EditCafePage() {
     }
   }, [id]);
 
-  if (loading || loadingSession) {
+  if (loading || status === 'loading') {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <p className="text-lg text-foreground">Loading...</p>
